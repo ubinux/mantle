@@ -114,6 +114,7 @@ func init() {
 			"UpdateEngine": TestUpdateEngine,
 			"DockerPing":   TestDockerPing,
 			"DockerEcho":   TestDockerEcho,
+			"DockerWget":   TestDockerWget,
 			"NTPDate":      TestNTPDate,
 		},
 		Distros: []string{"cl"},
@@ -182,6 +183,24 @@ func TestDockerPing() error {
 	select {
 	case <-time.After(DockerTimeout):
 		return fmt.Errorf("DockerPing timed out after %s.", DockerTimeout)
+	case err := <-errc:
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func TestDockerWget() error {
+	errc := make(chan error, 1)
+	go func() {
+		c := exec.Command("docker", "run", "ghcr.io/flatcar/busybox", "wget", "-q", "--no-check-certificate", "-O", "/dev/null", "http://flatcar.org")
+		err := c.Run()
+		errc <- err
+	}()
+	select {
+	case <-time.After(DockerTimeout):
+		return fmt.Errorf("DockerWget timed out after %s.", DockerTimeout)
 	case err := <-errc:
 		if err != nil {
 			return err
