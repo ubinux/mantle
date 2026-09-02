@@ -197,6 +197,8 @@ nodeRegistration:
 {{- end }}
 timeouts:
   controlPlaneComponentHealthCheck: 30m0s
+  kubernetesAPICall: 10m0s
+  kubeletHealthCheck: 30m0s
 ---
 apiVersion: kubeadm.k8s.io/v1beta4
 kind: ClusterConfiguration
@@ -326,6 +328,8 @@ discovery:
     - sha256:${certHashes}
 timeouts:
   controlPlaneComponentHealthCheck: 30m0s
+  kubernetesAPICall: 10m0s
+  kubeletHealthCheck: 30m0s
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
