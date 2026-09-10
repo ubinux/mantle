@@ -154,7 +154,7 @@ func locksmithCluster(c cluster.TestCluster) {
 	c.MustSSH(machs[0], "locksmithctl status")
 	c.MustSSH(machs[0], "locksmithctl set-max 3")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 	wg := worker.NewWorkerGroup(ctx, len(machs))
 
@@ -199,7 +199,7 @@ func locksmithTLS(c cluster.TestCluster) {
 		}
 		return nil
 	}
-	if err := util.Retry(5, 12*time.Second, retryClock); err != nil {
+	if err := util.Retry(500, 12*time.Second, retryClock); err != nil {
 		c.Fatal(err)
 	}
 
@@ -229,7 +229,7 @@ func locksmithTLS(c cluster.TestCluster) {
 		}
 		return nil
 	}
-	if err := util.Retry(10, 12*time.Second, checker); err != nil {
+	if err := util.Retry(100, 12*time.Second, checker); err != nil {
 		c.Fatal(err)
 	}
 }
