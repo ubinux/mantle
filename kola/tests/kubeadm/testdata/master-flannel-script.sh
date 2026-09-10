@@ -25,7 +25,7 @@ nodeRegistration:
       value: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
 timeouts:
   controlPlaneComponentHealthCheck: 30m0s
-  kubernetesAPICall: 10m0s
+  kubernetesAPICall: 30m0s
   kubeletHealthCheck: 30m0s
 ---
 apiVersion: kubeadm.k8s.io/v1beta4
@@ -83,7 +83,7 @@ discovery:
     - sha256:${certHashes}
 timeouts:
   controlPlaneComponentHealthCheck: 30m0s
-  kubernetesAPICall: 10m0s
+  kubernetesAPICall: 30m0s
   kubeletHealthCheck: 30m0s
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
