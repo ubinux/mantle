@@ -258,7 +258,7 @@ func kubeadmBaseTest(c cluster.TestCluster, params map[string]interface{}) {
 
 		// Wait up to 3 min (36*5 = 180s). The test can be flaky on overcommitted platforms.
 		if err := util.Retry(3600, 5*time.Second, func() error {
-			out, err := c.SSH(kubectl, `kubectl get pod/test-pod-1 -o json | jq '.status.containerStatuses[] | select (.name == "test") | .ready'`)
+			out, err := c.SSH(kubectl, `kubectl get pod/test-pod-1 -o json | jq '(.status.containerStatuses // [])[] | select (.name == "test") | .ready'`)
 			if err != nil {
 				return fmt.Errorf("getting container status: %v", err)
 			}
