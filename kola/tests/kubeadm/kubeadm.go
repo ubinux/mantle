@@ -60,8 +60,17 @@ var (
 					_, _ = c.SSH(controller, cmd)
 					patch := `{ grep -q svirt_lxc_file_t /etc/selinux/mcs/contexts/lxc_contexts && kubectl --namespace kube-system patch daemonset/cilium -p '{"spec":{"template":{"spec":{"containers":[{"name":"cilium-agent","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}}],"initContainers":[{"name":"mount-cgroup","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}},{"name":"apply-sysctl-overwrites","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}},{"name":"clean-cilium-state","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}}]}}}}'; } || true`
 					_ = c.MustSSH(controller, patch)
-					status := "/opt/bin/cilium status --wait --wait-duration 1m"
-					_ = c.MustSSH(controller, status)
+					if err := util.Retry(6, 20*time.Second, func() error {
+						if _, err := c.SSH(controller, "kubectl -n kube-system rollout status daemonset/cilium --timeout=5m"); err != nil {
+							return err
+						}
+						if _, err := c.SSH(controller, "kubectl -n kube-system rollout status deployment/cilium-operator --timeout=5m"); err != nil {
+							return err
+						}
+						return nil
+					}); err != nil {
+						c.Fatalf("cilium ipsec rollout did not become ready: %v", err)
+					}
 				},
 			},
 		},

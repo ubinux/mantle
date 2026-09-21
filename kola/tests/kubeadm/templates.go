@@ -299,13 +299,30 @@ EOF
 {{ if eq .CNI "cilium" }}
     # iconv transforms the output to valid ascii so that jenkins TAP parser accepts it
     sudo tar -xf {{ .DownloadDir }}/cilium.tar.gz -C {{ .DownloadDir }}
-    /opt/bin/cilium install \
-        --config enable-endpoint-routes=true \
-        --config cluster-pool-ipv4-cidr={{ .PodSubnet }} \
-        --version={{ .CiliumVersion }} 2>&1 | iconv --from-code utf-8 --to-code ascii//TRANSLIT
+    # Retry install because qemu/aarch64 can hit transient API/rate-limit stalls.
+    for i in $(seq 1 3); do
+        if /opt/bin/cilium install \
+            --config enable-endpoint-routes=true \
+            --config cluster-pool-ipv4-cidr={{ .PodSubnet }} \
+            --version={{ .CiliumVersion }} 2>&1 | iconv --from-code utf-8 --to-code ascii//TRANSLIT; then
+            break
+        fi
+        if [ "${i}" -eq 3 ]; then
+            exit 1
+        fi
+        sleep 30
+    done
     { grep -q svirt_lxc_file_t /etc/selinux/mcs/contexts/lxc_contexts && kubectl --namespace kube-system patch daemonset/cilium -p '{"spec":{"template":{"spec":{"containers":[{"name":"cilium-agent","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}}],"initContainers":[{"name":"mount-cgroup","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}},{"name":"apply-sysctl-overwrites","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}},{"name":"clean-cilium-state","securityContext":{"seLinuxOptions":{"level":"s0","type":"unconfined_t"}}}]}}}}'; } || true
-    # --wait will wait for status to report success
-    /opt/bin/cilium status --wait 2>&1 | iconv --from-code utf-8 --to-code ascii//TRANSLIT
+    # Retry status check because qemu/aarch64 can transiently hit client rate limiter timeouts.
+    for i in $(seq 1 6); do
+        if /opt/bin/cilium status --wait --wait-duration 5m 2>&1 | iconv --from-code utf-8 --to-code ascii//TRANSLIT; then
+            break
+        fi
+        if [ "${i}" -eq 6 ]; then
+            exit 1
+        fi
+        sleep 20
+    done
 {{ end }}
 } 1>&2
 
