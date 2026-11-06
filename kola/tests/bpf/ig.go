@@ -71,6 +71,7 @@ func igTest(c cluster.TestCluster) {
 		if _, err := c.SSH(node, fmt.Sprintf(`
 			set -ex
 			sudo ig run trace_exec:%[1]s --help
+			timeout 60 bash -c 'until docker info >/dev/null 2>&1; do sleep 1; done'
 			coproc IG { sudo ig run trace_exec:%[1]s --host --filter 'proc.comm=docker,args~ps' --output json --verbose 2>&1 > ig.json; }
 			trap 'kill %%%%' ERR
 			timeout 30 grep -F -m1 'running...' <&${IG[0]}
