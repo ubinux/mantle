@@ -77,6 +77,10 @@ fi
 		cmd := fmt.Sprintf(`
 set -euo pipefail
 
+# sysext merge may refresh unit files; make sure docker socket activation is healthy
+sudo systemctl daemon-reload
+sudo systemctl restart docker.socket
+sudo systemctl reset-failed docker.service || true
 sudo systemctl start docker
 
 cat >%[1]q <<'EOF'
