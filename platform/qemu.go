@@ -167,6 +167,9 @@ func MakeCLDiskTemplate(inputPath string) (output *os.File, result error) {
 	if _, err = f.WriteString("set linux_console=\"console=ttyS0,115200\"\n"); err != nil {
 		return nil, fmt.Errorf("writing grub.cfg: %v", err)
 	}
+	if _, err = f.WriteString("set linux_append=\"systemd.default_device_timeout_sec=300 rd.retry=300 rd.timeout=300\"\n"); err != nil {
+		return nil, fmt.Errorf("writing grub.cfg: %v", err)
+	}
 
 	// return fd to output file
 	output, err = os.Open(outputPath)
