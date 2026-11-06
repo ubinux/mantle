@@ -75,6 +75,7 @@ func igTest(c cluster.TestCluster) {
 			coproc IG { sudo ig run trace_exec:%[1]s --host --filter 'proc.comm=docker,args~ps' --output json --verbose 2>&1 > ig.json; }
 			trap 'kill %%%%' ERR
 			timeout 30 grep -F -m1 'running...' <&${IG[0]}
+			sleep 3
 			docker info
 			docker ps
 			docker images
